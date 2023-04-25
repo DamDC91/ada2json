@@ -1,3 +1,4 @@
+pragma Ada_2022;
 with Ada.Text_IO;
 with GNATCOLL.JSON;
 with Ada.Strings.Unbounded;
@@ -20,7 +21,7 @@ procedure Test is
    end Get_Content;
 
    procedure Load_And_Test (File : String;
-                            Exception_Expected : String)
+                            Exception_Expected : String := "")
    is
       F : Ada.Text_IO.File_Type;
       Content : Ada.Strings.Unbounded.Unbounded_String;
@@ -47,7 +48,7 @@ procedure Test is
    end Load_And_Test;
 
 begin
-   Load_And_Test ("test1.json", "");
+   Load_And_Test ("test1.json");
    Load_And_Test ("test2.json", "ADA2JSON.UNKNOWN_FIELD");
    Load_And_Test ("test3.json", "ADA2JSON.MISSING_FIELD");
    Load_And_Test ("test4.json", "ADA2JSON.UNKNOWN_FIELD");
