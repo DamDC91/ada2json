@@ -1,0 +1,9 @@
+name = "ada2json"
+description = "Simple Ada types mapping to JSON based on GNATCOLL.JSON"
+version = "0.1.0-dev"
+
+authors = ["Damien"]
+maintainers = ["Damien <damiensporting@gmail.com>"]
+maintainers-logins = ["DamDC91"]
+[[depends-on]]
+gnatcoll = "^23.0.0"
