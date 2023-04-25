@@ -12,6 +12,9 @@ package body Ada2Json.Array_Utils is
       else
          for I of Array_JSON loop
             Data (Idx) := Get (I);
+            if Idx /= Index_Type'Last then
+               Idx := Index_Type'Succ (Idx);
+            end if;
          end loop;
       end if;
       return Data;
