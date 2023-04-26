@@ -44,9 +44,10 @@ package body Ada2Json.Deserializer is
    is
       use GNATCOLL.JSON;
       Array_JSON : constant JSON_Array := Value.Get;
-      Res : Vectors.Vector := Vectors.To_Vector
-        (Ada.Containers.Count_Type (Length (Array_JSON)));
+      Res : Vectors.Vector := Vectors.Empty_Vector;
    begin
+      Res.Reserve_Capacity 
+        (Ada.Containers.Count_Type (Length (Array_JSON)));
       for D of Array_JSON loop
          Vectors.Append (Res, Read (D));
       end loop;
