@@ -57,7 +57,7 @@ private
       Get_Field   => Get_Field);
 
    package Deserialize is new Ada2Json.Deserializer
-     (T                => Element_Type,
+     (Element_Type                => Element_Type,
       Field_Names      => Field_Names,
       Fields_Types     => Fields_Types,
       Field_JSON_Types => Field_JSON_Types,

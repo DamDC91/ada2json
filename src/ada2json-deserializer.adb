@@ -3,13 +3,13 @@ with Ada.Containers;
 package body Ada2Json.Deserializer is
 
    function Read (Value : GNATCOLL.JSON.JSON_Value)
-                  return T
+                  return Element_Type
    is
       use GNATCOLL.JSON;
       Field_Initialized : array (Field_Names) of Boolean := (others => False);
 
       procedure Process_Fields
-        (Data  : in out T;
+        (Data  : in out Element_Type;
          Name  : String;
          Value : GNATCOLL.JSON.JSON_Value)
       is
@@ -28,8 +28,8 @@ package body Ada2Json.Deserializer is
          Field_Initialized (Fied) := True;
       end Process_Fields;
 
-      procedure Mapping is new GNATCOLL.JSON.Gen_Map_JSON_Object (T);
-      Data : T;
+      procedure Mapping is new GNATCOLL.JSON.Gen_Map_JSON_Object (Element_Type);
+      Data : Element_Type;
    begin
       Mapping (Value, Process_Fields'Access, Data);
       if (for some Initialized of Field_Initialized => not Initialized) then
