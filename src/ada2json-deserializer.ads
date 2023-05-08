@@ -25,4 +25,6 @@ package Ada2Json.Deserializer is
                         return Vectors.Vector
      with Pre => GNATCOLL.JSON.Kind (Value) in GNATCOLL.JSON.JSON_Array_Type;
 
+   procedure Nullable (F : Field_Names);
+
 end Ada2Json.Deserializer;

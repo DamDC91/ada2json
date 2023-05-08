@@ -2,6 +2,8 @@ with Ada.Containers;
 
 package body Ada2Json.Deserializer is
 
+   Nullable_Fields : array (Field_Names) of Boolean := (others => False);
+   
    function Read (Value : GNATCOLL.JSON.JSON_Value)
                   return Element_Type
    is
@@ -13,19 +15,21 @@ package body Ada2Json.Deserializer is
          Name  : String;
          Value : GNATCOLL.JSON.JSON_Value)
       is
-         Fied : Field_Names;
+         Field : Field_Names;
       begin
          begin
-            Fied := Field_Names'Value (Name);
+            Field := Field_Names'Value (Name);
          exception
             when Constraint_Error =>
                raise Unknown_Field with Name;
          end;
-         if Value.Kind /= Fields_Types (Fied) then
+         if Value.Kind /= Fields_Types (Field)
+           and not (Value.Kind = JSON_Null_Type and Nullable_Fields (Field))
+         then
             raise Unknown_Field with Name;
          end if;
-         Set_Field (Data, Fied,  Value);
-         Field_Initialized (Fied) := True;
+         Set_Field (Data, Field,  Value);
+         Field_Initialized (Field) := True;
       end Process_Fields;
 
       procedure Mapping is new GNATCOLL.JSON.Gen_Map_JSON_Object (Element_Type);
@@ -53,5 +57,11 @@ package body Ada2Json.Deserializer is
       end loop;
       return Res;
    end Read_Array;
+
+   procedure Nullable (F : Field_Names)
+   is
+   begin
+      Nullable_Fields (F) := True;
+   end Nullable;
 
 end Ada2Json.Deserializer;
