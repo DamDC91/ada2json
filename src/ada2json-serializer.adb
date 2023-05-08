@@ -10,7 +10,7 @@ package body Ada2Json.Serializer is
       J : constant JSON_Value := Create_Object;
    begin
       for Field in Field_Names'First .. Field_Names'Last loop
-         J.Set_Field (Field'Image, Get_Field (Data, Field));
+         J.Set_Field (Field_Names'Base'Image (Field), Get_Field (Data, Field));
       end loop;
       return J;
    end Create_JSON_Value;
