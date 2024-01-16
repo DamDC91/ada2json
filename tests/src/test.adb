@@ -54,4 +54,5 @@ begin
    Load_And_Test ("test4.json", "ADA2JSON.UNKNOWN_FIELD");
    Load_And_Test ("test5.json", "ADA2JSON.WRONG_ARRAY_SIZE");
    Load_And_Test ("test6.json", "ADA2JSON.MISSING_FIELD");
+   Load_And_Test ("test7.json", "ADA2JSON.TYPE_CONSTRAINT");
 end Test;

@@ -14,8 +14,20 @@ package body Test_Type.Json_Mapping is
                         renames GNATCOLL.JSON.Get;
    begin
       case Field is
-         when D1 => Data.D1 := My_Mod (Get_Int (Value));
-         when D2 => Data.D2 := My_Float (Get_Float (Value));
+         when D1 =>
+            if Get_Int (Value) >= Integer (My_Mod'First) and then
+              Get_Int (Value) <= Integer (My_Mod'Last)
+            then
+               Data.D1 := My_Mod (Get_Int (Value));
+            else
+               raise Ada2Json.Type_Constraint;
+            end if;
+         when D2 =>
+            if Get_Float (Value) >= Float (My_Float'First) and then
+              Get_Float (Value) <= Float (My_Float'Last)
+            then
+               Data.D2 := My_Float (Get_Float (Value));
+            end if;
       end case;
    end Set;
 
@@ -36,8 +48,8 @@ package body Test_Type.Json_Mapping is
       Get          => GNATCOLL.JSON.Get,
       Create       => GNATCOLL.JSON.Create);
 
-   procedure Set (Data : in out My_Record;
-                 Field : My_Record_Fields;
+   procedure Set (Data  : in out My_Record;
+                  Field : My_Record_Fields;
                   Value : GNATCOLL.JSON.JSON_Value)
    is
       use GNATCOLL.JSON;
