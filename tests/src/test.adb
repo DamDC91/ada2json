@@ -20,31 +20,71 @@ procedure Test is
       return Content;
    end Get_Content;
 
-   procedure Load_And_Test (File : String;
-                            Exception_Expected : String := "")
+   function Read_JSON_From_File (FileName : String)
+                                 return GNATCOLL.JSON.JSON_Value
    is
       F : Ada.Text_IO.File_Type;
       Content : Ada.Strings.Unbounded.Unbounded_String;
       Value : GNATCOLL.JSON.JSON_Value;
-      D : Test_Type.My_Record;
    begin
-      Ada.Text_IO.Open (F, Ada.Text_IO.In_File, File);
+      Ada.Text_IO.Open (F, Ada.Text_IO.In_File, FileName);
       Content := Get_Content (F);
       Value := GNATCOLL.JSON.Read (Strm => Content,
-                                   Filename => File);
+                                   Filename => FileName);
+      Ada.Text_IO.Close (F);
+      return Value;
+   end Read_JSON_From_File;
+
+   procedure Load_And_Test (FileName : String;
+                            Exception_Expected : String := "")
+   is
+      Value : constant GNATCOLL.JSON.JSON_Value :=
+        Read_JSON_From_File (FileName);
+      D : Test_Type.My_Record;
+      Data_Valid : Boolean := True;
+   begin
       begin
          D := Test_Type.Json_Mapping.Mapper.Read (Value);
       exception
          when e : others =>
+            Data_Valid := False;
             if Exception_Expected'Length = 0 or else
               Exception_Expected /= Ada.Exceptions.Exception_Name (e)
             then
-               Ada.Text_IO.Put_Line ("Test " & File & " failed");
+               Ada.Text_IO.Put_Line ("Test " & FileName & " failed");
                raise;
             end if;
       end;
-      Ada.Text_IO.Put_Line ("Test " & File & " passed");
-      Ada.Text_IO.Close (F);
+
+      if Data_Valid then
+         declare
+            D2 : Test_Type.My_Record;
+            Result : constant GNATCOLL.JSON.Read_Result :=
+              GNATCOLL.JSON.Read (Test_Type.Json_Mapping.Mapper.Write (D));
+            use type Test_Type.My_Record;
+         begin
+            if Result.Success then
+               D2 := Test_Type.Json_Mapping.Mapper.Read (Result.Value);
+               if D2 /= D then
+                  Ada.Text_IO.Put_Line ("Test " & FileName & " failed");
+                  Ada.Text_IO.Put_Line ("Failed to read Data back");
+                  return;
+               end if;
+            else
+               Ada.Text_IO.Put_Line ("Test " & FileName & " failed");
+               Ada.Text_IO.Put_Line ("Failed to write JSON: " &
+                                       GNATCOLL.JSON.Format_Parsing_Error
+                                       (Result.Error));
+               return;
+            end if;
+         exception
+            when others =>
+               Ada.Text_IO.Put_Line ("Test " & FileName & " failed");
+               raise;
+         end;
+      end if;
+
+      Ada.Text_IO.Put_Line ("Test " & FileName & " passed");
    end Load_And_Test;
 
 begin

@@ -27,7 +27,7 @@ package Test_Type.Json_Mapping is
       Get_Field        => Get,
       Set_Field        => Set);
 
-   type My_Record_Fields is (F1, F2, F3, F4, F5);
+   type My_Record_Fields is (F1, F2, F3, F4, F5, F6);
    type My_Record_Field_Types is array (My_Record_Fields)
      of GNATCOLL.JSON.JSON_Value_Type;
 
@@ -36,7 +36,8 @@ package Test_Type.Json_Mapping is
       F2 => GNATCOLL.JSON.JSON_Float_Type,
       F3 => GNATCOLL.JSON.JSON_String_Type,
       F4 => GNATCOLL.JSON.JSON_Array_Type,
-      F5 => GNATCOLL.JSON.JSON_Object_Type);
+      F5 => GNATCOLL.JSON.JSON_Object_Type,
+      F6 => GNATCOLL.JSON.JSON_Array_Type);
 
    procedure Set (Data : in out My_Record;
                   Field : My_Record_Fields;

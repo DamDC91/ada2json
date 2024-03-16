@@ -1,5 +1,5 @@
 with "config/ada2json_config.gpr";
-project Ada2json is
+Library project Ada2json is
 
    for Library_Name use "Ada2json";
    for Library_Version use Project'Library_Name & ".so." & Ada2json_Config.Crate_Version;

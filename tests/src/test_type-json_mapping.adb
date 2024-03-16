@@ -1,4 +1,5 @@
 with Ada2Json.Array_Utils;
+with Ada2Json.Vector_Utils;
 
 package body Test_Type.Json_Mapping is
 
@@ -48,6 +49,13 @@ package body Test_Type.Json_Mapping is
       Get          => GNATCOLL.JSON.Get,
       Create       => GNATCOLL.JSON.Create);
 
+   package My_Vec_Mapper is new Ada2Json.Vector_Utils
+     (Element_Type => Float,
+      Index_Type   => Positive,
+      Vectors      => My_Vec,
+      Get          => GNATCOLL.JSON.Get,
+      Create       => GNATCOLL.JSON.Create);
+
    procedure Set (Data  : in out My_Record;
                   Field : My_Record_Fields;
                   Value : GNATCOLL.JSON.JSON_Value)
@@ -60,6 +68,7 @@ package body Test_Type.Json_Mapping is
          when F3 => Data.F3 := Value.Get;
          when F4 => Data.F4 := My_Array_Mapper.Get (Value);
          when F5 => Data.F5 := Small_Mapper.Read (Value);
+         when F6 => Data.F6 := My_Vec_Mapper.Get (Value);
       end case;
 
    end Set;
@@ -75,7 +84,8 @@ package body Test_Type.Json_Mapping is
                  when F2 => Create (Data.F2),
                  when F3 => Create (Data.F3),
                  when F4 => My_Array_Mapper.Create (Data.F4),
-                 when F5 => Small_Mapper.Create_JSON_Value (Data.F5));
+                 when F5 => Small_Mapper.Create_JSON_Value (Data.F5),
+                 when F6 => My_Vec_Mapper.Create (Data.F6));
    end Get;
 
 end Test_Type.Json_Mapping;
