@@ -1,5 +1,8 @@
 with GNATCOLL.JSON;
+with Ada2Json.Deserializer;
+with Ada2Json.Serializer;
 with Ada2Json.Mapper;
+with Ada2Json;
 
 package Test_Type.Json_Mapping is
 
@@ -11,9 +14,10 @@ package Test_Type.Json_Mapping is
      (D1 => GNATCOLL.JSON.JSON_Int_Type,
       D2 => GNATCOLL.JSON.JSON_Float_Type);
 
-   procedure Set (Data : in out My_Small_Record;
-                  Field : My_Small_Record_Fields;
-                  Value : GNATCOLL.JSON.JSON_Value);
+   procedure Set (Data   : in out My_Small_Record;
+                  Field  : My_Small_Record_Fields;
+                  Value  : GNATCOLL.JSON.JSON_Value;
+                  Result : out Ada2Json.Setter_Result_Type);
 
    function Get (Data : My_Small_Record;
                  Field : My_Small_Record_Fields)
@@ -39,9 +43,10 @@ package Test_Type.Json_Mapping is
       F5 => GNATCOLL.JSON.JSON_Object_Type,
       F6 => GNATCOLL.JSON.JSON_Array_Type);
 
-   procedure Set (Data : in out My_Record;
-                  Field : My_Record_Fields;
-                  Value : GNATCOLL.JSON.JSON_Value);
+   procedure Set (Data   : in out My_Record;
+                  Field  : My_Record_Fields;
+                  Value  : GNATCOLL.JSON.JSON_Value;
+                  Result : out Ada2Json.Setter_Result_Type);
 
    function Get (Data : My_Record;
                  Field : My_Record_Fields)

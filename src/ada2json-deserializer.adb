@@ -1,62 +1,74 @@
 with Ada.Containers;
+with Ada.Strings.Unbounded;
 
 package body Ada2Json.Deserializer is
 
    Nullable_Fields : array (Field_Names) of Boolean := (others => False);
    
    function Read (Value : GNATCOLL.JSON.JSON_Value)
-                  return Element_Type
+                  return Result_Type.Read_Result_Type
    is
       use GNATCOLL.JSON;
       Field_Initialized : array (Field_Names) of Boolean := (others => False);
+      Kind : Ada2Json.Result_Kind := Success;
+      Msg  : Ada.Strings.Unbounded.Unbounded_String;
 
       procedure Process_Fields
         (Data  : in out Element_Type;
          Name  : String;
          Value : GNATCOLL.JSON.JSON_Value)
       is
-         Field : Field_Names;
+         Field  : Field_Names;
+         Result : Ada2Json.Setter_Result_Type;
       begin
+         if Kind /= Success then
+            return;
+         end if;
          begin
             Field := Field_Names'Value (Name);
          exception
             when Constraint_Error =>
-               raise Unknown_Field with Name;
+               Kind := Unknown_Field;
+               Ada.Strings.Unbounded.Set_Unbounded_String 
+                 (Msg, "Unknown field """ & Name & """");
+               return;
          end;
          if Value.Kind /= Fields_Types (Field)
            and not (Value.Kind = JSON_Null_Type and Nullable_Fields (Field))
          then
-            raise Unknown_Field with Name;
+            Kind := Type_Error;
+            Ada.Strings.Unbounded.Set_Unbounded_String 
+              (Msg, "Wrong type in field """ & Name & """");
+            return;
          end if;
-         Set_Field (Data, Field,  Value);
-         Field_Initialized (Field) := True;
+         Set_Field (Data, Field,  Value, Result);
+         if Result.Kind not in Ada2Json.Success then
+            Kind := Result.Kind;
+            Msg  := Result.Error_Msg;
+         else
+            Field_Initialized (Field) := True;
+         end if;
       end Process_Fields;
 
       procedure Mapping is new GNATCOLL.JSON.Gen_Map_JSON_Object (Element_Type);
       Data : Element_Type;
    begin
       Mapping (Value, Process_Fields'Access, Data);
-      if (for some Initialized of Field_Initialized => not Initialized) then
-         raise Missing_Field;
-      else
-         return Data;
+      
+      if Kind /= Success then
+         return Result_Type.Create_Error (Kind, Msg);
       end if;
-   end Read;
-
-   function Read_Array (Value : GNATCOLL.JSON.JSON_Value)
-                        return Vectors.Vector
-   is
-      use GNATCOLL.JSON;
-      Array_JSON : constant JSON_Array := Value.Get;
-      Res : Vectors.Vector := Vectors.Empty_Vector;
-   begin
-      Res.Reserve_Capacity 
-        (Ada.Containers.Count_Type (Length (Array_JSON)));
-      for D of Array_JSON loop
-         Vectors.Append (Res, Read (D));
+      
+      for Field in Field_Initialized'Range loop
+         if not Field_Initialized (Field) then
+            return (Kind      => Missing_Field,
+                    Error_Msg => Ada.Strings.Unbounded.To_Unbounded_String 
+                      ("Missing field """ & Field'Img & """"));
+         end if;
       end loop;
-      return Res;
-   end Read_Array;
+      
+      return (Kind => Success, Value => Data);
+   end Read;
 
    procedure Nullable (F : Field_Names)
    is

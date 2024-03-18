@@ -1,6 +1,7 @@
 package body Ada2Json.Vector_Utils is
 
-   function Get (Value : GNATCOLL.JSON.JSON_Value) return Vectors.Vector
+   function Get (Value : GNATCOLL.JSON.JSON_Value)
+                 return Read_Result.Read_Result_Type
    is
       use GNATCOLL.JSON;
       Data : Vectors.Vector;
@@ -8,12 +9,16 @@ package body Ada2Json.Vector_Utils is
    begin
       for I of Array_JSON loop
          declare
-            Elem : Element_Type renames Get (I);
+            Elem : Element_Read_Result.Read_Result_Type renames Get (I);
          begin
-            Vectors.Append (Data, Elem);
+            if Elem.Kind in Success then
+               Vectors.Append (Data, Elem.Value);
+            else
+               return Read_Result.Create_Error (Elem.Kind, Elem.Error_Msg);
+            end if;
          end;
       end loop;
-      return Data;
+      return (Kind => Success, Value => Data);
    end Get;
 
    function Create (Data : Vectors.Vector) return GNATCOLL.JSON.JSON_Value

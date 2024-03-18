@@ -4,7 +4,7 @@ with GNATCOLL.JSON;
 with Ada.Strings.Unbounded;
 with Test_Type;
 with Test_Type.Json_Mapping;
-with Ada.Exceptions;
+with Ada2Json;
 
 procedure Test is
 
@@ -36,40 +36,46 @@ procedure Test is
    end Read_JSON_From_File;
 
    procedure Load_And_Test (FileName : String;
-                            Exception_Expected : String := "")
+                            Error_Expected : Ada2Json.Result_Kind
+                            := Ada2Json.Success)
    is
       Value : constant GNATCOLL.JSON.JSON_Value :=
         Read_JSON_From_File (FileName);
-      D : Test_Type.My_Record;
-      Data_Valid : Boolean := True;
-   begin
-      begin
-         D := Test_Type.Json_Mapping.Mapper.Read (Value);
-      exception
-         when e : others =>
-            Data_Valid := False;
-            if Exception_Expected'Length = 0 or else
-              Exception_Expected /= Ada.Exceptions.Exception_Name (e)
-            then
-               Ada.Text_IO.Put_Line ("Test " & FileName & " failed");
-               raise;
-            end if;
-      end;
 
-      if Data_Valid then
+      D : constant Test_Type.Json_Mapping.Mapper.Read_Result_Type
+        := Test_Type.Json_Mapping.Mapper.Read (Value);
+      use type Ada2Json.Result_Kind;
+   begin
+      if D.Kind /= Error_Expected then
+         Ada.Text_IO.Put_Line ("Test " & FileName & " failed");
+         if D.Kind in Ada2Json.Error_Kind then
+            Ada.Text_IO.Put_Line
+              (Ada.Strings.Unbounded.To_String (D.Error_Msg));
+         end if;
+         return;
+      end if;
+
+      if D.Kind = Ada2Json.Success then
          declare
-            D2 : Test_Type.My_Record;
             Result : constant GNATCOLL.JSON.Read_Result :=
-              GNATCOLL.JSON.Read (Test_Type.Json_Mapping.Mapper.Write (D));
-            use type Test_Type.My_Record;
+              GNATCOLL.JSON.Read
+                (Test_Type.Json_Mapping.Mapper.Write (D.Value));
+
          begin
             if Result.Success then
-               D2 := Test_Type.Json_Mapping.Mapper.Read (Result.Value);
-               if D2 /= D then
-                  Ada.Text_IO.Put_Line ("Test " & FileName & " failed");
-                  Ada.Text_IO.Put_Line ("Failed to read Data back");
-                  return;
-               end if;
+               declare
+                  D2 : constant Test_Type.Json_Mapping.Mapper.Read_Result_Type
+                    := Test_Type.Json_Mapping.Mapper.Read (Result.Value);
+                  use type Test_Type.My_Record;
+               begin
+                  if D2.Kind in Ada2Json.Error_Kind
+                    or else D2.Value /= D.value
+                  then
+                     Ada.Text_IO.Put_Line ("Test " & FileName & " failed");
+                     Ada.Text_IO.Put_Line ("Failed to read Data back");
+                     return;
+                  end if;
+               end;
             else
                Ada.Text_IO.Put_Line ("Test " & FileName & " failed");
                Ada.Text_IO.Put_Line ("Failed to write JSON: " &
@@ -77,10 +83,6 @@ procedure Test is
                                        (Result.Error));
                return;
             end if;
-         exception
-            when others =>
-               Ada.Text_IO.Put_Line ("Test " & FileName & " failed");
-               raise;
          end;
       end if;
 
@@ -89,10 +91,10 @@ procedure Test is
 
 begin
    Load_And_Test ("test1.json");
-   Load_And_Test ("test2.json", "ADA2JSON.UNKNOWN_FIELD");
-   Load_And_Test ("test3.json", "ADA2JSON.MISSING_FIELD");
-   Load_And_Test ("test4.json", "ADA2JSON.UNKNOWN_FIELD");
-   Load_And_Test ("test5.json", "ADA2JSON.WRONG_ARRAY_SIZE");
-   Load_And_Test ("test6.json", "ADA2JSON.MISSING_FIELD");
-   Load_And_Test ("test7.json", "ADA2JSON.TYPE_CONSTRAINT");
+   Load_And_Test ("test2.json", Ada2Json.Type_Error);
+   Load_And_Test ("test3.json", Ada2Json.Missing_Field);
+   Load_And_Test ("test4.json", Ada2Json.Unknown_Field);
+   Load_And_Test ("test5.json", Ada2Json.Wrong_Array_Size);
+   Load_And_Test ("test6.json", Ada2Json.Missing_Field);
+   Load_And_Test ("test7.json", Ada2Json.Type_Error);
 end Test;
